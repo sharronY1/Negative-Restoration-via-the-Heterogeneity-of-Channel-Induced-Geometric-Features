@@ -1,0 +1,16 @@
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+dist/
+build/
+.venv/
+.env
+*.pt
+*.pth
+runs/
+cache/
+outputs/
+_*.txt
+.DS_Store
+assets/teaser-*.png

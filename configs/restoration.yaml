@@ -1,0 +1,22 @@
+# Fixed L13 architecture. Paths are relative to your working directory.
+task: restoration
+seed: 1809096180
+da3:
+  model_id: depth-anything/DA3NESTED-GIANT-LARGE
+data:
+  train_manifest: data/restoration_train.json
+  val_manifest: data/restoration_val.json
+  cache_dir: cache/restoration
+  num_workers: 4
+train:
+  batch_size: 4
+  total_iters: 5800
+  warmup_iters: 200
+  lr: 0.0002
+  min_lr: 1.0e-8
+  fft_weight: 0.125
+  val_every: 290
+  save_every: 290
+  log_every: 29
+  max_val_images: 20
+  output_dir: runs/restoration
