@@ -20,6 +20,21 @@ pip install -c requirements.txt xformers==0.0.31.post1 'git+https://github.com/B
 
 The feature extractor loads `depth-anything/DA3NESTED-GIANT-LARGE`. Set `da3.model_id` in the YAML files to a local DA3 model directory for offline use. CUDA requirements depend on image resolution; full-resolution feature extraction can use substantial GPU memory.
 
+## 📥 Pretrained weights
+
+Download checkpoints from [Hugging Face](https://huggingface.co/sharron2/Negative-Restoration-via-the-Heterogeneity-of-Channel-Induced-Geome):
+
+| Stage | File | Link |
+| --- | --- | --- |
+| Restoration | `restoration.pt` | [download](https://huggingface.co/sharron2/Negative-Restoration-via-the-Heterogeneity-of-Channel-Induced-Geome/resolve/main/restoration.pt) |
+| Color mapping | `color_mapping.pt` | [download](https://huggingface.co/sharron2/Negative-Restoration-via-the-Heterogeneity-of-Channel-Induced-Geome/resolve/main/color_mapping.pt) |
+
+```bash
+mkdir -p checkpoints
+huggingface-cli download sharron2/Negative-Restoration-via-the-Heterogeneity-of-Channel-Induced-Geome \
+  restoration.pt color_mapping.pt --local-dir checkpoints
+```
+
 ## 📦 Data preparation
 
 For the BlueNeg directory layout, generate manifests with:
@@ -46,7 +61,7 @@ Restore one image using your trained model:
 ```bash
 python -m negative_restoration.infer \
   --config configs/restoration.yaml \
-  --checkpoint runs/restoration/last.pt \
+  --checkpoint checkpoints/restoration.pt \
   --input /path/to/negative.png --output outputs/restored.png
 ```
 
@@ -57,7 +72,7 @@ Map the restored image to a reference's printed colors:
 ```bash
 python -m negative_restoration.infer \
   --config configs/color_mapping.yaml \
-  --checkpoint runs/color_mapping/last.pt \
+  --checkpoint checkpoints/color_mapping.pt \
   --input outputs/restored.png --reference /path/to/reference.png \
   --output outputs/printed.png
 ```
