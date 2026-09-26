@@ -7,6 +7,7 @@ import numpy as np
 import torch
 from torch.utils.data import Dataset
 
+from .features import da3_layer
 from .io import image_tensor
 
 
@@ -37,7 +38,7 @@ class CachedDataset(Dataset):
     def __init__(self, root, task, split):
         self.root = Path(root)
         index = json.loads((self.root / "index.json").read_text())
-        if index["task"] != task or index["layer"] != 13 or index["split"] != split:
+        if index["task"] != task or index["layer"] != da3_layer(task) or index["split"] != split:
             raise ValueError("Cache task, layer or split does not match the requested dataset")
         self.task = task
         self.samples = index["samples"]

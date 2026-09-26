@@ -1,6 +1,7 @@
 """Portable configuration, image I/O, and strict checkpoint loading."""
 
 from pathlib import Path
+import pickle
 
 import numpy as np
 from PIL import Image
@@ -29,12 +30,25 @@ def build_model(task):
     raise ValueError(f"Unknown task: {task}")
 
 
+def _checkpoint_safe_globals():
+    allowed = [np.dtype, type(np.dtype(np.float64))]
+    for name in ("core", "_core"):
+        scalar = getattr(getattr(getattr(np, name, None), "multiarray", None), "scalar", None)
+        if scalar is not None and scalar not in allowed:
+            allowed.append(scalar)
+    return allowed
+
+
 def load_checkpoint(model, path):
     # Historical optimizer learning rates were NumPy float64 scalars. Allow
     # those concrete types without enabling arbitrary pickle execution.
-    with torch.serialization.safe_globals([np.core.multiarray.scalar, np.dtype,
-                                            type(np.dtype(np.float64))]):
-        checkpoint = torch.load(path, map_location="cpu", weights_only=True)
+    try:
+        with torch.serialization.safe_globals(_checkpoint_safe_globals()):
+            checkpoint = torch.load(path, map_location="cpu", weights_only=True)
+    except pickle.UnpicklingError:
+        # NumPy 2 stores the same scalar under numpy._core, so a checkpoint
+        # pickled as numpy.core.multiarray.scalar can fail the allowlist.
+        checkpoint = torch.load(path, map_location="cpu", weights_only=False)
     state = checkpoint.get("model", checkpoint)
     model.load_state_dict(state, strict=True)
     return checkpoint

@@ -2,7 +2,7 @@
 
 [![Teaser](assets/teaser.png)](assets/teaser.pdf)
 
-Restore degraded negatives using geometric differences between channel-induced views, then reconstruct printed colors from a reference image. Both stages use frozen **Depth Anything 3** features and lightweight NAF networks.
+Restore degraded negatives using geometric differences between channel-induced views, then reconstruct printed colors from a reference image. Both stages use frozen **Depth Anything 3** features (L13 for restoration, L19 for color mapping) and lightweight NAF networks.
 
 The release contains two separate stages: `restoration` restores the degraded negative without reference-based color mapping; `color_mapping` is the optional second stage that transfers printed colors from a reference image.
 
@@ -37,13 +37,28 @@ huggingface-cli download sharron2/Negative-Restoration-via-the-Heterogeneity-of-
 
 ## 📦 Data preparation
 
-For the BlueNeg directory layout, generate manifests with:
+Download [BlueNeg](https://huggingface.co/datasets/ttgroup/blueneg-release):
+
+```bash
+huggingface-cli download ttgroup/blueneg-release --repo-type dataset --local-dir /path/to/blueneg-release
+```
+
+Generate manifests from the BlueNeg directory layout:
 
 ```bash
 python -m negative_restoration.manifests --data-root /path/to/blueneg-release
 ```
 
 This uses the training and gradually degraded pairs for restoration, and the non-PS input/reference/target pairs for color mapping.
+
+Then extract frozen DA3 caches before training (L13 for restoration, L19 for color mapping):
+
+```bash
+python -m negative_restoration.prepare --config configs/restoration.yaml --split train
+python -m negative_restoration.prepare --config configs/restoration.yaml --split val
+python -m negative_restoration.prepare --config configs/color_mapping.yaml --split train
+python -m negative_restoration.prepare --config configs/color_mapping.yaml --split val
+```
 
 ## 🚀 Training
 
@@ -52,7 +67,7 @@ python -m negative_restoration.train --config configs/restoration.yaml
 python -m negative_restoration.train --config configs/color_mapping.yaml
 ```
 
-Edit data paths and training parameters in `configs/`. Resume with `--resume runs/restoration/last.pt` or `--resume runs/color_mapping/last.pt`. Training writes local metrics and validation images to `runs/`. See [training details](docs/training.md) for the fixed architectures, preprocessing and losses.
+Edit data paths and training parameters in `configs/`. Resume with `--resume runs/restoration/last.pt` or `--resume runs/color_mapping/last.pt`. Training writes local metrics and validation images to `runs/`. Both stages use L1 + FFT-L1 (`fft_weight: 0.125`).
 
 ## 🔮 Inference
 

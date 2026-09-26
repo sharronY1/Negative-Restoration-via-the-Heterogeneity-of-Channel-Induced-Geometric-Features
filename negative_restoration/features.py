@@ -1,9 +1,20 @@
-"""Frozen DA3 L13 features with task-specific image geometry."""
+"""Frozen DA3 features: restoration uses L13, color mapping uses L19."""
 
 import os
 
 import numpy as np
 import torch
+
+RESTORATION_LAYER = 13
+COLOR_MAPPING_LAYER = 19
+
+
+def da3_layer(task):
+    if task == "restoration":
+        return RESTORATION_LAYER
+    if task == "color_mapping":
+        return COLOR_MAPPING_LAYER
+    raise ValueError(f"Unknown task: {task}")
 
 
 def pad_image(rgb, multiple):
@@ -20,15 +31,16 @@ class DA3Features:
         self.model.requires_grad_(False)
 
     @torch.inference_mode()
-    def _extract(self, views, resolution):
+    def _extract(self, views, resolution, layer):
+        key = f"feat_layer_{layer}"
         pred = self.model.inference(
-            image=views, export_feat_layers=[13], export_dir=None,
+            image=views, export_feat_layers=[layer], export_dir=None,
             process_res=resolution, process_res_method="upper_bound_resize",
             ref_view_strategy="first",
         )
-        if pred.aux is None or "feat_layer_13" not in pred.aux:
-            raise RuntimeError("DA3 did not return L13 features")
-        features = np.asarray(pred.aux["feat_layer_13"])
+        if pred.aux is None or key not in pred.aux:
+            raise RuntimeError(f"DA3 did not return L{layer} features")
+        features = np.asarray(pred.aux[key])
         while features.ndim > 4 and features.shape[0] == 1:
             features = features[0]
         if features.ndim == 3 and len(views) == 1:
@@ -40,7 +52,7 @@ class DA3Features:
     def restoration(self, rgb):
         canvas = pad_image(rgb, 28)
         views = [np.repeat(canvas[:, :, c:c+1], 3, axis=2) for c in range(3)]
-        features, processed = self._extract(views, max(canvas.shape[:2]))
+        features, processed = self._extract(views, max(canvas.shape[:2]), RESTORATION_LAYER)
         expected = (canvas.shape[0] // 14, canvas.shape[1] // 14)
         if features.shape[1:3] != expected or np.asarray(processed[0]).shape[:2] != canvas.shape[:2]:
             raise RuntimeError("DA3 changed the restoration canvas geometry")
@@ -50,5 +62,6 @@ class DA3Features:
         # Historical crop extraction resizes the 512 crop to 518; NAF still
         # receives the original crop. Full-image inference uses pad-only /14.
         canvas = rgb if training else pad_image(rgb, 14)
-        features, _ = self._extract([canvas], 518 if training else max(canvas.shape[:2]))
+        features, _ = self._extract(
+            [canvas], 518 if training else max(canvas.shape[:2]), COLOR_MAPPING_LAYER)
         return canvas, features[0].transpose(2, 0, 1).copy()

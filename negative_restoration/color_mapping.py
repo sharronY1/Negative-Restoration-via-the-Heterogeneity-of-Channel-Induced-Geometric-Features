@@ -8,10 +8,10 @@ from .blocks import NAFBlock, NAFBlockStack
 
 
 class TokenResidual(nn.Module):
-    def __init__(self, channels, hidden=512, num_layers=4):
+    def __init__(self, channels, hidden=512, num_layers=2):
         super().__init__()
-        # Matches the L19 residual experiment: 1x1 MLP with num_layers>=2,
-        # hidden width held constant, last layer zero-init.
+        # Matches da3_l19_residual: 2-layer 1x1 MLP, hidden width held
+        # constant, last layer zero-init.
         if num_layers < 2:
             raise ValueError(f"num_layers must be >= 2, got {num_layers}")
         layers = [nn.Conv2d(channels + 128, hidden, 1), nn.GELU()]

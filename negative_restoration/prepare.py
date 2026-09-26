@@ -1,4 +1,4 @@
-"""Prepare L13 caches from raw RGB manifests (train or full-image validation)."""
+"""Prepare DA3 caches from raw RGB manifests (train or full-image validation)."""
 
 import argparse
 import itertools
@@ -11,7 +11,7 @@ from tqdm import tqdm
 
 from .crops import derive_seed, sample_random_crop, replay_crop
 from .data import read_manifest
-from .features import DA3Features, pad_image
+from .features import DA3Features, da3_layer, pad_image
 from .io import load_config, load_rgb, select_device
 
 
@@ -85,7 +85,7 @@ def prepare(cfg, split, device, limit=None):
                 filename = f"{i:06d}_{j:02d}.npz"
                 np.savez(out / filename, **data)
                 samples.append(filename)
-    index = {"task": task, "layer": 13, "split": split, "model_id": cfg["da3"]["model_id"],
+    index = {"task": task, "layer": da3_layer(task), "split": split, "model_id": cfg["da3"]["model_id"],
              "source_manifest": str(cfg["data"][f"{split}_manifest"]), "samples": samples,
              "source_count": len(rows), "seed": cfg["seed"]}
     (out / "index.json").write_text(json.dumps(index, indent=2) + "\n")

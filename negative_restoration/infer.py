@@ -1,4 +1,4 @@
-"""Inference from raw RGB images using frozen DA3 L13 features."""
+"""Inference from raw RGB images using frozen DA3 features (L13 restoration, L19 color)."""
 
 import argparse
 from pathlib import Path
