@@ -1,4 +1,4 @@
-"""Frozen DA3 features: restoration uses L13, color mapping uses L19."""
+"""Frozen DA3 features with task-specific image geometry."""
 
 import os
 

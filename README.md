@@ -2,7 +2,7 @@
 
 [![Teaser](assets/teaser.png)](assets/teaser.pdf)
 
-Restore degraded negatives using geometric differences between channel-induced views, then reconstruct printed colors from a reference image. Both stages use frozen **Depth Anything 3** features (L13 for restoration, L19 for color mapping) and lightweight NAF networks.
+Restore degraded negatives using geometric differences between channel-induced views, then reconstruct printed colors from a reference image. Both stages use frozen **Depth Anything 3** features and lightweight NAF networks.
 
 The release contains two separate stages: `restoration` restores the degraded negative without reference-based color mapping; `color_mapping` is the optional second stage that transfers printed colors from a reference image.
 
@@ -51,7 +51,7 @@ python -m negative_restoration.manifests --data-root /path/to/blueneg-release
 
 This uses the training and gradually degraded pairs for restoration, and the non-PS input/reference/target pairs for color mapping.
 
-Then extract frozen DA3 caches before training (L13 for restoration, L19 for color mapping):
+Then extract frozen DA3 caches before training:
 
 ```bash
 python -m negative_restoration.prepare --config configs/restoration.yaml --split train
